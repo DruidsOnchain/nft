@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест графика одной монеты</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .card {
+      width: 220px;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 20px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div><strong>Bitcoin (BTC/USDT)</strong></div>
+    <div>Цена: <span id="price">$...</span></div>
+    <div>Изменение: <span id="change">...</span></div>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <script>
+    async function drawChart() {
+      // Получаем данные по BTC
+      const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1');
+      const data = await res.json();
+      const prices = data.prices.map(p => p[1]);
+
+      // Получаем текущую цену
+      const coin = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin');
+      const [btc] = await coin.json();
+      document.getElementById('price').innerText = `$${btc.current_price}`;
+      document.getElementById('change').innerText = `${btc.price_change_percentage_24h.toFixed(2)}%`;
+
+      new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: prices.map((_, i) => i),
+          datasets: [{
+            data: prices,
+            borderColor: '#007bff',
+            borderWidth: 1,
+            tension: 0.3,
+            pointRadius: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          animation: false,
+          scales: { x: { display: false }, y: { display: false } },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+      });
+    }
+
+    drawChart();
+  </script>
+</body>
+</html>
